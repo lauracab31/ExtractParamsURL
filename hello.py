@@ -46,10 +46,72 @@ def longueur_url(url):
         print(f"Erreur lors du calcul de la longueur de l'URL : {e}")
         return None
 
+def contient_arobase(url):
+    """
+    Vérifie si l'URL contient un caractère '@'.
+    """
+    try:
+        # Vérifier si le caractère '@' est présent dans l'URL
+        if '@' in url:
+            print(f"L'URL contient un '@' : {url}")
+            return True
+        else:
+            print(f"L'URL ne contient pas de '@' : {url}")
+            return False
+    except Exception as e:
+        print(f"Erreur lors de l'analyse de l'URL : {e}")
+        return False
+
+def contient_https(url):
+    """
+    Vérifie si l'URL commence par 'https://'.
+    """
+    try:
+        # Vérifier si l'URL commence par 'https://'
+        parsed_url = urlparse(url)
+        if parsed_url.scheme == "https":
+            print(f"L'URL utilise HTTPS : {url}")
+            return True
+        else:
+            print(f"L'URL n'utilise pas HTTPS : {url}")
+            return False
+    except Exception as e:
+        print(f"Erreur lors de l'analyse de l'URL : {e}")
+        return False
+
+def contient_sous_domaine(url):
+    """
+    Vérifie si l'URL contient un sous-domaine.
+    """
+    try:
+        # Extraire le domaine de l'URL
+        parsed_url = urlparse(url)
+        domaine = parsed_url.netloc
+
+        # Retirer le 'www.' s'il est présent
+        if domaine.startswith("www."):
+            domaine = domaine[4:]
+
+        # Diviser le domaine en parties (par '.'), un sous-domaine doit avoir plus de 2 parties
+        parties_domaine = domaine.split('.')
+        
+        # Si le domaine a plus de 2 parties, il y a un sous-domaine
+        if len(parties_domaine) > 2:
+            print(f"L'URL contient un sous-domaine : {url}")
+            return True
+        else:
+            print(f"L'URL ne contient pas de sous-domaine : {url}")
+            return False
+
+    except Exception as e:
+        print(f"Erreur lors de l'analyse de l'URL : {e}")
+        return False
+
 # Exemples d'utilisation
 urls = [
-    "http://192.168.1.1/page",
+    "http://192.168.1.1/p@age",
     "https://[2001:0db8::1]/path",
+    "https://subdomain.example.com",
     "https://www.example.com",
     "http://127.0.0.1/login",
     "https://256.256.256.256",  # Test invalide
@@ -59,6 +121,9 @@ for url in urls:
     print(f"\nAnalyse de l'URL : {url}")
     est_adresse_ip(url)
     longueur_url(url)
+    contient_arobase(url)
+    contient_https(url)
+    contient_sous_domaine(url)
 
 
 
