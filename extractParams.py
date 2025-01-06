@@ -2,6 +2,12 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
+import time
 
 
 def est_adresse_ip(url):
@@ -69,13 +75,13 @@ def contient_https(url):
         parsed_url = urlparse(url)
         if parsed_url.scheme == "https":
             print(f"L'URL utilise HTTPS : {url}")
-            return True
+            return 1
         else:
             print(f"L'URL n'utilise pas HTTPS : {url}")
-            return False
+            return -1
     except Exception as e:
         print(f"Erreur lors de l'analyse de l'URL : {e}")
-        return False
+        return 0
 
 def contient_sous_domaine(url):
     """
@@ -96,14 +102,14 @@ def contient_sous_domaine(url):
         # Si le domaine a plus de 2 parties, il y a un sous-domaine
         if len(parties_domaine) > 2:
             print(f"L'URL contient un sous-domaine : {url}")
-            return True
+            return 1
         else:
             print(f"L'URL ne contient pas de sous-domaine : {url}")
-            return False
+            return -1
 
     except Exception as e:
         print(f"Erreur lors de l'analyse de l'URL : {e}")
-        return False
+        return 0
 
 
 
@@ -142,26 +148,115 @@ def has_favicon(url):
         favicon_response = requests.get(favicon_url, headers=headers, stream=True)
         if favicon_response.status_code == 200:
             print(f"Le favicon de l'URL est disponible ici : {favicon_url}")
-            return True
+            return 1
         else:
             print(f"Le favicon est inaccessible : {favicon_url}")
-            return False
+            return -1
 
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la récupération de l'URL : {e}")
-        return False
+        return 0
+
+
+def check_onmouseover(url):
+    """
+    Vérifie si la source de la page contient un événement onMouseOver.
+    Retourne :
+    - 1 si onMouseOver est trouvé.
+    - -1 sinon.
+    """
+    try:
+        # Définir un User-Agent pour éviter les restrictions sur certains sites
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        # Récupérer le contenu de la page
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code != 200:
+            print(f"Erreur : Impossible d'accéder à l'URL. Code de statut {response.status_code}")
+            return -1
+        
+        # Analyser le contenu HTML avec BeautifulSoup
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Rechercher les balises avec un attribut onMouseOver
+        onmouseover_tags = soup.find_all(attrs={"onmouseover": True})
+        
+        # Vérifier si l'attribut modifie la barre de statut
+        for tag in onmouseover_tags:
+            if "window.status" in tag['onmouseover'].lower():
+                print(f"Événement onMouseOver trouvé modifiant la barre de statut : {tag}")
+                return 1
+        
+        # Aucun onMouseOver modifiant la barre de statut trouvé
+        print("Aucun événement onMouseOver modifiant la barre de statut trouvé.")
+        return -1
+    
+    except Exception as e:
+        print(f"Erreur lors de l'analyse de l'URL : {e}")
+        return -1
+
+
+def count_external_links(url):
+    """
+    Returns 1 if there are more than 2 external links,
+    0 if there are 1 or 2 external links,
+    -1 if there are no external links.
+    """
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+        
+        # Check if the request was successful
+        if response.status_code != 200:
+            print(f"Error: Unable to access {url}. Status Code: {response.status_code}")
+            return -1
+        
+        # Parse the HTML content
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Get all anchor tags (<a>) in the webpage
+        links = soup.find_all('a', href=True)
+        
+        # Count external links
+        external_links_count = 0
+        for link in links:
+            href = link['href']
+            
+            # Check if the link is external (it does not belong to the same domain)
+            parsed_url = urlparse(url)
+            parsed_href = urlparse(urljoin(url, href))  # Resolve relative URL
+            
+            # If the domain is different, it is an external link
+            if parsed_url.netloc != parsed_href.netloc:
+                external_links_count += 1
+        
+        # Determine result based on the number of external links
+        if external_links_count > 2:
+            return 1
+        elif external_links_count >= 1:
+            return 0
+        else:
+            return -1
+            
+    except Exception as e:
+        print(f"Error occurred while processing {url}: {e}")
+        return -1
+
 
 # Exemples d'utilisation
 urls = [
-
+    
     "https://www.marmiton.org/recettes/recette_pate-a-crepes_123erjiotejroigjezufhuzehfozehozeotiezotojti72.aspx",
     "http://93.184.216.34/",
     "https://www.wikipedia.org",
     "https://www.google.com/",
     "https://www.kaggle.com/datasets/nitsey/dataset-phising-website",
+    
     "https://github.com/",
-    "https://www.berkshirehathaw@ay.com/"
-
+   
 ]
 
 for url in urls:
@@ -175,6 +270,22 @@ for url in urls:
 
     result = contient_arobase(url)
     print(f"URL: {url} -> Résultat: {result}")
+
+    result = contient_https(url)
+    print(f"URL: {url} -> Contient https : {result}")
+
+    result = contient_sous_domaine(url)
+    print(f"URL: {url} -> Contient sous-domaine : {result}")
+
+    result = has_favicon(url)
+    print(f"URL: {url} -> Contient favicon : {result}")
+
+    result = check_onmouseover(url)
+    print(f"URL: {url} -> on mouseover : {result}")
+
+    result = count_external_links(url)
+    print(f"URL: {url} -> count external links : {result}")
+
 
 
 
