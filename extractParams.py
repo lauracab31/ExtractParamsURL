@@ -3,66 +3,62 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 
+
 def est_adresse_ip(url):
     """
     Détermine si une URL contient une adresse IP (IPv4 ou IPv6).
+    Retourne 1 si c'est une IP, -1 si ce n'est pas une IP, 0 en cas d'erreur.
     """
     try:
-        # Extraire le netloc (nom d'hôte ou IP) depuis l'URL
         parsed_url = urlparse(url)
         host = parsed_url.netloc
 
-        # Enlever 'www.' s'il est présent
         if host.startswith("www."):
             host = host[4:]
 
-        # Expression régulière pour IPv4
         regex_ipv4 = re.compile(r'^(\d{1,3}\.){3}\d{1,3}$')
-        # Expression régulière pour IPv6
         regex_ipv6 = re.compile(r'^[0-9a-fA-F:]+$')
 
-        # Vérifier si le nom d'hôte correspond à IPv4 ou IPv6
-        if regex_ipv4.match(host):
-            print(f"L'URL contient une adresse IPv4 : {host}")
-            return True
-        elif regex_ipv6.match(host):
-            print(f"L'URL contient une adresse IPv6 : {host}")
-            return True
+        if regex_ipv4.match(host) or regex_ipv6.match(host):
+            return 1
         else:
-            print(f"L'URL ne contient pas d'adresse IP : {host}")
-            return False
-    except Exception as e:
-        print(f"Erreur lors de l'analyse de l'URL : {e}")
-        return False
+            return -1
+    except Exception:
+        return 0
 
 def longueur_url(url):
     """
-    Calcule et affiche la longueur totale de l'URL.
+    Calcule et retourne une valeur en fonction de la longueur totale de l'URL :
+    -1 : si la longueur est < 54
+     0 : si 54 ≤ longueur ≤ 75
+     1 : si longueur > 75
     """
     try:
         # Calculer la longueur totale de l'URL
         longueur = len(url)
-        print(f"La longueur de l'URL est : {longueur} caractères")
-        return longueur
+        
+        # Vérifier la plage de longueur et retourner la valeur correspondante
+        if longueur < 54:
+            return -1
+        elif 54 <= longueur <= 75:
+            return 0
+        else:
+            return 1
     except Exception as e:
         print(f"Erreur lors du calcul de la longueur de l'URL : {e}")
-        return None
+        return 0  # Retourne 0 en cas d'erreur
 
 def contient_arobase(url):
     """
     Vérifie si l'URL contient un caractère '@'.
+    Retourne 1 si '@' est présent, -1 sinon.
     """
     try:
         # Vérifier si le caractère '@' est présent dans l'URL
-        if '@' in url:
-            print(f"L'URL contient un '@' : {url}")
-            return True
-        else:
-            print(f"L'URL ne contient pas de '@' : {url}")
-            return False
+        return 1 if '@' in url else -1
     except Exception as e:
         print(f"Erreur lors de l'analyse de l'URL : {e}")
-        return False
+        return 0  # Retourne 0 en cas d'erreur
 
 def contient_https(url):
     """
@@ -110,13 +106,19 @@ def contient_sous_domaine(url):
         return False
 
 
+
+
 def has_favicon(url):
     """
     Vérifie si l'URL possède un favicon, même si le favicon est hébergé sur un autre domaine.
     """
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
     try:
         # Effectuer une requête GET pour obtenir le contenu de la page
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         
         # Vérifier si la requête a réussi
         if response.status_code != 200:
@@ -129,46 +131,50 @@ def has_favicon(url):
         # Rechercher la balise <link> avec rel="icon" ou rel="shortcut icon"
         favicon = soup.find('link', rel=lambda rel: rel and 'icon' in rel.lower())
 
-        # Vérifier si une balise favicon a été trouvée
         if favicon and 'href' in favicon.attrs:
-            favicon_url = favicon['href']
-            
-            # Si le href est relatif, on le résout pour obtenir une URL complète
-            favicon_url = urljoin(url, favicon_url)
-            
-            # Vérifier si l'URL du favicon est accessible
-            favicon_response = requests.head(favicon_url, allow_redirects=True)
-            if favicon_response.status_code == 200:
-                print(f"Le favicon de l'URL est disponible ici : {favicon_url}")
-                return True
-            else:
-                print(f"Le favicon est inaccessible : {favicon_url}")
-                return False
+            # Résoudre l'URL complète si nécessaire
+            favicon_url = urljoin(url, favicon['href'])
         else:
-            print("Aucun favicon trouvé pour cette URL.")
+            # Vérifier la présence d'un favicon par défaut à /favicon.ico
+            favicon_url = urljoin(url, '/favicon.ico')
+        
+        # Vérifier si l'URL du favicon est accessible
+        favicon_response = requests.get(favicon_url, headers=headers, stream=True)
+        if favicon_response.status_code == 200:
+            print(f"Le favicon de l'URL est disponible ici : {favicon_url}")
+            return True
+        else:
+            print(f"Le favicon est inaccessible : {favicon_url}")
             return False
 
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la récupération de l'URL : {e}")
         return False
+
 # Exemples d'utilisation
 urls = [
 
-    "https://www.marmiton.org/recettes/recette_pate-a-crepes_12372.aspx",
+    "https://www.marmiton.org/recettes/recette_pate-a-crepes_123erjiotejroigjezufhuzehfozehozeotiezotojti72.aspx",
+    "http://93.184.216.34/",
     "https://www.wikipedia.org",
-    "https://www.kaggle.com/datasets/nitsey/dataset-phising-website"
+    "https://www.google.com/",
+    "https://www.kaggle.com/datasets/nitsey/dataset-phising-website",
+    "https://github.com/",
+    "https://www.berkshirehathaw@ay.com/"
 
 ]
 
 for url in urls:
+    
     print(f"\nAnalyse de l'URL : {url}")
-    est_adresse_ip(url)
-    longueur_url(url)
-    contient_arobase(url)
-    contient_https(url)
-    contient_sous_domaine(url)
-    has_favicon(url)
+    
+    print("Adresse IP :", est_adresse_ip(url))
 
+    result = longueur_url(url)
+    print(f"URL: {url} -> Résultat: {result}")
+
+    result = contient_arobase(url)
+    print(f"URL: {url} -> Résultat: {result}")
 
 
 
