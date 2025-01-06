@@ -1,5 +1,7 @@
 import re
-from urllib.parse import urlparse
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse, urljoin
 
 def est_adresse_ip(url):
     """
@@ -107,14 +109,55 @@ def contient_sous_domaine(url):
         print(f"Erreur lors de l'analyse de l'URL : {e}")
         return False
 
+
+def has_favicon(url):
+    """
+    Vérifie si l'URL possède un favicon, même si le favicon est hébergé sur un autre domaine.
+    """
+    try:
+        # Effectuer une requête GET pour obtenir le contenu de la page
+        response = requests.get(url)
+        
+        # Vérifier si la requête a réussi
+        if response.status_code != 200:
+            print(f"Erreur : Impossible d'accéder à l'URL. Code de statut {response.status_code}")
+            return False
+        
+        # Analyser le contenu HTML avec BeautifulSoup
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Rechercher la balise <link> avec rel="icon" ou rel="shortcut icon"
+        favicon = soup.find('link', rel=lambda rel: rel and 'icon' in rel.lower())
+
+        # Vérifier si une balise favicon a été trouvée
+        if favicon and 'href' in favicon.attrs:
+            favicon_url = favicon['href']
+            
+            # Si le href est relatif, on le résout pour obtenir une URL complète
+            favicon_url = urljoin(url, favicon_url)
+            
+            # Vérifier si l'URL du favicon est accessible
+            favicon_response = requests.head(favicon_url, allow_redirects=True)
+            if favicon_response.status_code == 200:
+                print(f"Le favicon de l'URL est disponible ici : {favicon_url}")
+                return True
+            else:
+                print(f"Le favicon est inaccessible : {favicon_url}")
+                return False
+        else:
+            print("Aucun favicon trouvé pour cette URL.")
+            return False
+
+    except requests.exceptions.RequestException as e:
+        print(f"Erreur lors de la récupération de l'URL : {e}")
+        return False
 # Exemples d'utilisation
 urls = [
-    "http://192.168.1.1/p@age",
-    "https://[2001:0db8::1]/path",
-    "https://subdomain.example.com",
-    "https://www.example.com",
-    "http://127.0.0.1/login",
-    "https://256.256.256.256",  # Test invalide
+
+    "https://www.marmiton.org/recettes/recette_pate-a-crepes_12372.aspx",
+    "https://www.wikipedia.org",
+    "https://www.kaggle.com/datasets/nitsey/dataset-phising-website"
+
 ]
 
 for url in urls:
@@ -124,6 +167,7 @@ for url in urls:
     contient_arobase(url)
     contient_https(url)
     contient_sous_domaine(url)
+    has_favicon(url)
 
 
 
