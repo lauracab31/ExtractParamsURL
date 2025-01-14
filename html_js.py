@@ -40,30 +40,3 @@ def has_iframe(url):
             return True
     else:
         return False
-
-
-def has_rightClick(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # verifier dans le div s'il contient click droit
-    overlays = soup.find_all('div', style=lambda value: value and 'pointer-events: none' in value)
-    if overlays:
-        print("Overlay detected that may block right-click.")
-    else:
-        print("No overlay detected.")
-
-
-urls = [
-
-    "https://www.marmiton.org/recettes/recette_pate-a-crepes_12372.aspx",
-    "https://www.wikipedia.org",
-    "https://www.kaggle.com/datasets/nitsey/dataset-phising-website"
-
-]
-
-for url in urls:
-    print(f"\nAnalyse de l'URL : {url}")
-    has_popup(url)
-    has_iframe(url)
-    has_rightClick(url)
