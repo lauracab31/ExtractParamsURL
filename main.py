@@ -1,8 +1,9 @@
 import threading
 import time
 #on importe les différentes fonctions de chaque fichier pour les lancer sur différents threads
-from fichier1 import fonction1
-from fichier2 import fonction2
+from webTraffic import web_traffic
+from hasDNSRecord import has_DNS_Record
+from ageOfDomain import age_of_domain
 
 # Créer les threads
 thread1 = threading.Thread(target=fonction1, args=("argument1",))
