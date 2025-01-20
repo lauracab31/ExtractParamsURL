@@ -25,9 +25,9 @@ def est_adresse_ip(url):
         regex_ipv6 = re.compile(r'^[0-9a-fA-F:]+$')
 
         if regex_ipv4.match(host) or regex_ipv6.match(host):
-            return 1
-        else:
             return -1
+        else:
+            return 1
     except Exception:
         return 0
     
