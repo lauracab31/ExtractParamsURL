@@ -1,67 +1,117 @@
 import threading
 import time
+import requests
+from queue import Queue
+
 #on importe les différentes fonctions de chaque fichier pour les lancer sur différents threads
 from webTraffic import web_traffic
 from hasDNSRecord import has_DNS_Record
 from ageOfDomain import age_of_domain
-from adress_bar_based import est_adresse_ip, longueur_url, contient_arobase, contient_sous_domaine, has_favicon, contient_https
+from adress_bar_based import (
+    est_adresse_ip,
+    longueur_url,
+    contient_arobase,
+    contient_sous_domaine,
+    has_favicon,
+    contient_https
+)
 from count_external_links import count_external_links
 from html_js import has_popup, has_iframe
 
-# liste d'url données par l'orchestrateur 
-def get_urlList(urls):
-    for url in urls:
-        response = requests.get(url)
-        print(f"Got data from {url}")
-        
-        # Créer les threads pour chaque url de la liste d'URL 
-        thread1 = threading.Thread(target=web_traffic, args=(url))
-        thread2 = threading.Thread(target=has_DNS_Record, args=(url))
-        thread3 = threading.Thread(target=age_of_domain, args=(url))
-        thread4 = threading.Thread(target=est_adresse_ip, args=(url)))
-        thread5 = threading.Thread(target=longueur_url, args=(url))
-        thread6 = threading.Thread(target=contient_arobase, args=(url))
-        thread7 = threading.Thread(target=contient_sous_domaine, args=(url))
-        thread8 = threading.Thread(target=has_favicon, args=(url))
-        thread9 = threading.Thread(target=contient_https, args=(url))
-        thread10 = threading.Thread(target=count_external_links, args=(url))
-        thread11 = threading.Thread(target=has_popup, args=(url))
-        thread12 = threading.Thread(target=has_iframe, args=(url))
-        
-        #on lance un compteur pour évaluer le temps de la requête
-        start = time.perf_counter()
-        
-        # Lancer les threads avec arguments
-        thread1.start()
-        thread2.start()
-        thread3.start()
-        thread4.start()
-        thread5.start()
-        thread6.start()
-        thread7.start()
-        thread8.start()
-        thread9.start()
-        thread10.start()
-        thread11.start()
-        thread12.start()
-        
-        # Attendre la fin des threads
-        thread1.join()
-        thread2.join()
-        thread3.join()
-        thread4.join()
-        thread5.join()
-        thread6.join()
-        thread7.join()
-        thread8.join()
-        thread9.join()
-        thread10.join()
-        thread11.join()
-        thread12.join()
-        
-        #on évalue le temps qui s'est écoulé
-        finish = time.perf_counter()
-        print(f'Finished in {round(finish-start, 2)} second(s)')
+# Liste d'attente pour les URLs
+url_queue = Queue()
 
-        #retourne résulats à l'orchestrateur (url+données associées)
+# Fonction pour ajouter des URLs à la liste d'attente des URLs à traiter (i.e à encoder)
+def add_url_to_queue(url):
+    url_queue.put(url)
+    print(f"URL ajoutée à la liste d'attente : {url}")
 
+# Fonction principale pour traiter les URLs
+def process_urls():
+    while not url_queue.empty():
+        url = url_queue.get()  # Récupérer une URL de la liste
+        print(f"Traitement de l'URL : {url}")
+        
+        # Dictionnaire pour stocker les résultats pour cette URL
+        url_data = {}
+
+        # Liste des threads
+        threads = []
+
+        # Fonction pour exécuter une tâche dans un thread et enregistrer le résultat
+        def run_task(func, url, key):
+            try:
+                result = func(url)
+                url_data[key] = result
+            except Exception as e:
+                url_data[key] = f"Erreur : {e}"
+        
+        # Mapping des fonctions et clés
+        tasks = {
+            "web_traffic": web_traffic,
+            "has_DNS_Record": has_DNS_Record,
+            "age_of_domain": age_of_domain,
+            "est_adresse_ip": est_adresse_ip,
+            "longueur_url": longueur_url,
+            "contient_arobase": contient_arobase,
+            "contient_sous_domaine": contient_sous_domaine,
+            "has_favicon": has_favicon,
+            "contient_https": contient_https,
+            "count_external_links": count_external_links,
+            "has_popup": has_popup,
+            "has_iframe": has_iframe,
+        }
+
+        # Créer et démarrer les threads
+        for key, func in tasks.items():
+            thread = threading.Thread(target=run_task, args=(func, url, key))
+            threads.append(thread)
+            thread.start()
+
+        # Attendre la fin de tous les threads
+        for thread in threads:
+            thread.join()
+
+        # Afficher les résultats pour l'URL
+        print(f"Résultats pour {url} : {url_data}")
+
+        # Indiquer que le traitement de cette URL est terminé
+        url_queue.task_done()
+
+        #Envoyer les résultats du traitement à l'orchestrateur
+        send_results_to_orchestrator(url, url_data)
+
+# Fonction pour envoyer les résultats à l'orchestrateur (exemple)
+def send_results_to_orchestrator(url, data):
+    orchestrator_endpoint = "http://orchestrator.example.com/receive_data"
+    payload = {
+        "url": url,
+        "data": data
+    }
+    try:
+        response = requests.post(orchestrator_endpoint, json=payload)
+        response.raise_for_status()  # Lève une exception si la requête a échoué
+        print(f"Résultats envoyés avec succès pour {url}. Réponse : {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"Erreur lors de l'envoi des résultats pour {url} : {e}")
+
+# Exemple d'utilisation à mettre dans le main
+from orchestrator_utils import send_results_to_orchestrator
+
+# Exemple d'utilisation
+url = "http://example.com"
+data = {"key": "value"}
+send_results_to_orchestrator(url, data)
+
+if __name__ == "__main__":
+    # Ajouter des URLs à la liste d'attente
+    urls_from_orchestrator = [
+        "http://example.com",
+        "http://test.com",
+        "http://sample.org"
+    ]
+    for url in urls_from_orchestrator:
+        add_url_to_queue(url)
+
+    # Traiter les URLs
+    process_urls()
