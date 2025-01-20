@@ -15,18 +15,18 @@ def get_urlList(urls):
         print(f"Got data from {url}")
         
         # Créer les threads pour chaque url de la liste d'URL 
-        thread1 = threading.Thread(target=web_traffic, args=("argument1",))
-        thread2 = threading.Thread(target=has_DNS_Record, args=("argument2"))
-        thread3 = threading.Thread(target=age_of_domain, args=("argument2"))
-        thread4 = threading.Thread(target=est_adresse_ip, args=("argument2"))
-        thread5 = threading.Thread(target=longueur_url, args=("argument2"))
-        thread6 = threading.Thread(target=contient_arobase, args=("argument2"))
-        thread7 = threading.Thread(target=contient_sous_domaine, args=("argument2"))
-        thread8 = threading.Thread(target=has_favicon, args=("argument2"))
-        thread9 = threading.Thread(target=contient_https, args=("argument2"))
-        thread10 = threading.Thread(target=count_external_links, args=("argument2"))
-        thread11 = threading.Thread(target=has_popup, args=("argument2"))
-        thread12 = threading.Thread(target=has_iframe, args=("argument2"))
+        thread1 = threading.Thread(target=web_traffic, args=(url))
+        thread2 = threading.Thread(target=has_DNS_Record, args=(url))
+        thread3 = threading.Thread(target=age_of_domain, args=(url))
+        thread4 = threading.Thread(target=est_adresse_ip, args=(url)))
+        thread5 = threading.Thread(target=longueur_url, args=(url))
+        thread6 = threading.Thread(target=contient_arobase, args=(url))
+        thread7 = threading.Thread(target=contient_sous_domaine, args=(url))
+        thread8 = threading.Thread(target=has_favicon, args=(url))
+        thread9 = threading.Thread(target=contient_https, args=(url))
+        thread10 = threading.Thread(target=count_external_links, args=(url))
+        thread11 = threading.Thread(target=has_popup, args=(url))
+        thread12 = threading.Thread(target=has_iframe, args=(url))
         
         #on lance un compteur pour évaluer le temps de la requête
         start = time.perf_counter()
@@ -63,5 +63,5 @@ def get_urlList(urls):
         finish = time.perf_counter()
         print(f'Finished in {round(finish-start, 2)} second(s)')
 
-        #etourne résulats à l'orchestrateur
+        #retourne résulats à l'orchestrateur (url+données associées)
 
