@@ -94,6 +94,48 @@ def contient_sous_domaine(url):
         print(f"Erreur lors de l'analyse de l'URL : {e}")
         return 0
     
+def double_slash_redirecting(url):
+    """
+    Verify if '//' appears after the character # 7
+    Return 1 if Pishing or 0 if Legitime
+    """
+    full_url = urlparse(url).geturl()
+    # print(full_url)
+    
+    # find all the // positions
+    occurrences = [i for i in range(len(full_url) - 1) if full_url[i:i+2] == '//']
+    # print(occurrences)
+    
+    # Verify if '//' is after position 7
+    return -1 if any(pos > 7 for pos in occurrences) else 1 # 1 is Legitimate, -1 is Phishing
+
+def domain_registeration_length(url):
+    """
+    See the WhoisXMLAPI API for domain information.
+    Returns -1 if expiration date is <= 1 years, otherwise returns 1 
+    """
+    api_key = "at_LY1xMXJhHmgeKtStzKc68kdTtMwvK"
+    domain = f"https://www.whoisxmlapi.com/whoisserver/WhoisService?domainName={url}&apiKey={api_key}&outputFormat=JSON"
+    try:
+        response = requests.get(domain)
+        data = response.json()
+        date = datetime.now()
+        expiration_date = data.get("WhoisRecord", {}).get("registryData", {}).get("expiresDate")
+        
+        if date and expiration_date:
+            expiration_date = expiration_date.replace("Z", "")
+            expiration_date = date.strptime(expiration_date, '%Y-%m-%dT%H:%M:%S')
+            
+            duration = (expiration_date - date).days // 365
+
+            if duration > 1:
+                return 1
+        else:
+            return -1
+    except Exception as e:
+        print(f"Error: {e}")
+        return -1
+    
 
 def has_favicon(url):
     """
