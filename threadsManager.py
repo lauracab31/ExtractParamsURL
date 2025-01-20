@@ -99,9 +99,9 @@ def process_urls(url):
 #from orchestrator_utils import send_results_to_orchestrator
 
 # Exemple d'utilisation
-url = "http://example.com"
-data = {"key": "value"}
-data=process_urls(url, data)
+#url = "http://example.com"
+#data = {"key": "value"}
+#data=process_urls(url, data)
 
 #if __name__ == "__main__":
     #try:
