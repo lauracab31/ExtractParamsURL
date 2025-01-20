@@ -44,6 +44,7 @@ def process_urls():
                 result = func(url)
                 url_data[key] = result
             except Exception as e:
+                print(f"Erreur dans la tâche {key} pour {url} : {e}")
                 url_data[key] = f"Erreur : {e}"
         
         # Mapping des fonctions et clés
@@ -64,7 +65,7 @@ def process_urls():
 
         # Créer et démarrer les threads
         for key, func in tasks.items():
-            thread = threading.Thread(target=run_task, args=(func, url, key))
+            thread = threading.Thread(target=run_task, args=(func, url, key), daemon=True)
             threads.append(thread)
             thread.start()
 
@@ -104,14 +105,21 @@ data = {"key": "value"}
 send_results_to_orchestrator(url, data)
 
 if __name__ == "__main__":
-    # Ajouter des URLs à la liste d'attente
-    urls_from_orchestrator = [
-        "http://example.com",
-        "http://test.com",
-        "http://sample.org"
-    ]
-    for url in urls_from_orchestrator:
-        add_url_to_queue(url)
+    try:
+        # Ajouter des URLs à la liste d'attente
+        urls_from_orchestrator = [
+            "http://example.com",
+            "http://test.com",
+            "http://sample.org"
+        ]
+        for url in urls_from_orchestrator:
+            add_url_to_queue(url)
 
-    # Traiter les URLs
-    process_urls()
+        # Traiter les URLs
+        process_urls()
+
+        # Attendre que toutes les tâches soient terminées
+        url_queue.join()
+
+    except Exception as e:
+        print(f"Erreur inattendue : {e}")
