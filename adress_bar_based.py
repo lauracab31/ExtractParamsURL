@@ -129,10 +129,10 @@ def has_favicon(url):
         favicon_response = requests.get(favicon_url, headers=headers, stream=True)
         if favicon_response.status_code == 200:
             print(f"Le favicon de l'URL est disponible ici : {favicon_url}")
-            return 1
+            return -1
         else:
             print(f"Le favicon est inaccessible : {favicon_url}")
-            return -1
+            return 1
 
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la récupération de l'URL : {e}")
