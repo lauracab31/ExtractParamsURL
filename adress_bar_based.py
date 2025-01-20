@@ -155,3 +155,18 @@ def contient_https(url):
     except Exception as e:
         print(f"Erreur lors de l'analyse de l'URL : {e}")
         return 0
+    
+def has_prefix_suffix(url):
+    try:
+        # Parsear la URL para extraer el dominio
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc
+        
+        # Verificar si el dominio contiene un guion
+        if '-' in domain:
+            return 1
+        else:
+            return -1
+    except Exception as e:
+        print(f"Error al procesar la URL: {e}")
+        return False
