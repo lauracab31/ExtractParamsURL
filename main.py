@@ -4,6 +4,10 @@ import time
 from webTraffic import web_traffic
 from hasDNSRecord import has_DNS_Record
 from ageOfDomain import age_of_domain
+import adress_bar_based
+import count_external_links
+import html_js
+
 
 # Créer les threads
 thread1 = threading.Thread(target=fonction1, args=("argument1",))
