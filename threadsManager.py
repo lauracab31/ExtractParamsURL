@@ -18,42 +18,32 @@ from adress_bar_based import (
 from count_external_links import count_external_links
 from html_js import has_popup, has_iframe
 
-# Liste d'attente pour les URLs
-#url_queue = Queue()
-
-# Fonction pour ajouter des URLs à la liste d'attente des URLs à traiter (i.e à encoder)
-#def add_url_to_queue(url):
-    #url_queue.put(url)
-    #print(f"URL ajoutée à la liste d'attente : {url}")
-
 # Fonction principale pour traiter les URLs
 def process_url(url):
-    #while not url_queue.empty():
-        #url = url_queue.get()  # Récupérer une URL de la liste
-        print(f"Traitement de l'URL : {url}")
-        
-        # Dictionnaire pour stocker les résultats pour cette URL
-        url_data = {}
+    print(f"Traitement de l'URL : {url}")
 
-        # Liste des threads
-        threads = []
+    # Dictionnaire pour stocker les résultats pour cette URL
+    url_data = {}
 
-        # Fonction pour exécuter une tâche dans un thread et enregistrer le résultat
-        def run_task(func, url, key):
-            try:
-                result = func(url)
-                url_data[key] = result
-            except Exception as e:
-                print(f"Erreur dans la tâche {key} pour {url} : {e}")
-                url_data[key] = f"Erreur : {e}"
+    # Liste des threads
+    threads = []
+
+    # Fonction pour exécuter une tâche dans un thread et enregistrer le résultat
+    def run_task(func, url, key):
+        try:
+            result = func(url)
+            url_data[key] = result
+        except Exception as e:
+            print(f"Erreur dans la tâche {key} pour {url} : {e}")
+            url_data[key] = f"Erreur : {e}"
         
         # Mapping des fonctions et clés CHANGER ORDRE EN FONCTIN DU MODEL
         tasks = {
             "web_traffic": web_traffic,
             "has_DNS_Record": has_DNS_Record,
             "age_of_domain": age_of_domain,
-            "est_adresse_ip": est_adresse_ip,
-            "longueur_url": longueur_url,
+            "est_adresse_ip": having_IP_Address,
+            "longueur_url": URL_Length,
             "contient_arobase": contient_arobase,
             "contient_sous_domaine": contient_sous_domaine,
             "has_favicon": has_favicon,
@@ -64,64 +54,16 @@ def process_url(url):
         }
 
         # Créer et démarrer les threads
-        for key, func in tasks.items():
-            thread = threading.Thread(target=run_task, args=(func, url, key), daemon=True)
-            threads.append(thread)
-            thread.start()
+    for key, func in tasks.items():
+        thread = threading.Thread(target=run_task, args=(func, url, key), daemon=True)
+        threads.append(thread)
+        thread.start()
 
-        # Attendre la fin de tous les threads
-        for thread in threads:
-            thread.join()
+    # Attendre la fin de tous les threads
+    for thread in threads:
+        thread.join()
 
-        # Afficher les résultats pour l'URL
-        print(f"Résultats pour {url} : {url_data}")
-
-        # Indiquer que le traitement de cette URL est terminé
-        #url_queue.task_done()
-
-        # Exemple pour montrer le format de sortie de chaque data_url
-        
-
-        #Retourner les résultats du traitement à l'orchestrateur
-        return (url_data)
-
-# Fonction pour envoyer les résultats à l'orchestrateur (exemple)
-#def send_results_to_orchestrator(data):
-    #orchestrator_endpoint = "http://orchestrator.example.com/receive_data"
-    #payload = {
-        #"data": data
-    #}
-    #try:
-        #response = requests.post(orchestrator_endpoint, json=payload)
-        #response.raise_for_status()  # Lève une exception si la requête a échoué
-        #print(f"Résultats envoyés avec succès pour {url}. Réponse : {response.status_code}")
-    #except requests.exceptions.RequestException as e:
-        #print(f"Erreur lors de l'envoi des résultats pour {url} : {e}")
-
-# Exemple d'utilisation à mettre dans le main
-#from orchestrator_utils import send_results_to_orchestrator
-
-# Exemple d'utilisation
-#url = "http://example.com"
-#data = {"key": "value"}
-#data=process_urls(url, data)
-
-#if __name__ == "__main__":
-    #try:
-        # Ajouter des URLs à la liste d'attente
-        #urls_from_orchestrator = [
-            #"http://example.com",
-            #"http://test.com",
-            #"http://sample.org"
-        #]
-        #for url in urls_from_orchestrator:
-            #add_url_to_queue(url)
-
-        # Traiter les URLs
-        #process_urls()
-
-        # Attendre que toutes les tâches soient terminées
-        #url_queue.join()
-
-    #except Exception as e:
-        #print(f"Erreur inattendue : {e}")
+    print(f"Résultats pour {url} : {url_data}")
+    
+    # Retourner les résultats au format dict
+    return url_data
