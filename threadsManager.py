@@ -27,7 +27,7 @@ from html_js import has_popup, has_iframe
     #print(f"URL ajoutée à la liste d'attente : {url}")
 
 # Fonction principale pour traiter les URLs
-def process_urls(url):
+def process_url(url):
     #while not url_queue.empty():
         #url = url_queue.get()  # Récupérer une URL de la liste
         print(f"Traitement de l'URL : {url}")
