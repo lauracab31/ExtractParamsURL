@@ -79,6 +79,9 @@ def process_url(url):
         # Indiquer que le traitement de cette URL est terminé
         #url_queue.task_done()
 
+        # Exemple pour montrer le format de sortie de chaque data_url
+        
+
         #Retourner les résultats du traitement à l'orchestrateur
         return (url_data)
 
