@@ -1,32 +1,23 @@
-import threading
-import time
-#on importe les différentes fonctions de chaque fichier pour les lancer sur différents threads
-from webTraffic import web_traffic
-from hasDNSRecord import has_DNS_Record
-from ageOfDomain import age_of_domain
-import adress_bar_based
-import count_external_links
-import html_js
+from threadsManager import process_url
+import json
+# test en local
+#url = "http://example.com"
+#data = {"key": "value"}
+#data=process_url(url, data)
 
-
-# Créer les threads
-thread1 = threading.Thread(target=fonction1, args=("argument1",))
-thread2 = threading.Thread(target=fonction2, args=("argument2", "argument3"))
-
-#on lance un compteur pour évaluer le temps de la requête
-start = time.perf_counter()
-
-# Lancer les threads avec arguments
-thread1.start()
-thread2.start()
-
-# Attendre la fin des threads
-thread1.join()
-thread2.join()
-
-#on évalue le temps qui s'est écoulé
-finish = time.perf_counter()
-print(f'Finished in {round(finish-start, 2)} second(s)')
-
-
-
+if __name__ == "__main__":
+    def execute_Encoder_code(url):
+        try:
+            # Traiter l'URL et obtenir les résultats
+            url_data = process_url(url)
+            
+            # Convertir les résultats en JSON
+            url_data_json = json.dumps(url_data, indent=4)  # Ajoute une mise en forme pour lecture facile
+            print(f"Résultats JSON : {url_data_json}")
+            
+            return url_data_json
+        
+        except Exception as e:
+            print(f"Erreur inattendue : {e}")
+            # Retourner un objet JSON d'erreur
+            return json.dumps({"error": f"Erreur inattendue : {e}"})
